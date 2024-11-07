@@ -41,7 +41,7 @@ class BattleModel:
 
 
         Return:
-            The winner's meal
+            Str: The winner's meal
         """
         logger.info("Two meals enter, one meal leaves!")
 
@@ -128,7 +128,7 @@ class BattleModel:
 
 
         Return:
-            The calculated battle score based off the formula.
+            float: The calculated battle score based off the formula.
         """
         difficulty_modifier = {"HIGH": 1, "MED": 2, "LOW": 3}
 
