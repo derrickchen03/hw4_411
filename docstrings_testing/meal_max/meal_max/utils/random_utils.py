@@ -15,12 +15,13 @@ def get_random() -> float:
     decimal fraction formatted to two decimal places.The response is parsed and converted to a float. If the request
     is unsuccessful or if the response cannot be parsed as a float, an execption is raised.
 
-    Raises:
-        ValueError: if the response from random.org is not a valid float
-        RuntimeError: if the request to the random.org fails or times out
-
     Returns:
-        float: A random decimal number between 0 and 1 with two decimal places
+    float: A random floating point decimal pulled from the Random.org API
+
+    Raises:
+    ValueError: If the response from random.org is not valid, eg: not a float
+    RuntimeError: If the request to the random.org API times out
+    RuntimeError: If the request to the random.org API fails
     """
     url = "https://www.random.org/decimal-fractions/?num=1&dec=2&col=1&format=plain&rnd=new"
 
