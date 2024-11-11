@@ -1,7 +1,30 @@
 import pytest
+from contextlib import contextmanager
 
 from meal_max.models.kitchen_model import Meal
 from meal_max.models.battle_model import BattleModel
+
+
+@pytest.fixture
+def mock_cursor(mocker):
+    mock_conn = mocker.Mock()
+    mock_cursor = mocker.Mock()
+
+    # Mock the connection's cursor
+    mock_conn.cursor.return_value = mock_cursor
+
+    mock_cursor.fetchone.side_effect = None
+    mock_cursor.fetchall.return_value = []
+    mock_conn.commit.return_value = None
+
+    # Mock the get_db_connection context manager from sql_utils
+    @contextmanager
+    def mock_get_db_connection():
+        yield mock_conn  # Yield the mocked connection object
+
+    mocker.patch("meal_max.models.kitchen_model.get_db_connection", mock_get_db_connection)
+
+    return mock_cursor  # Return the mock cursor for further expectations in tests
 
 @pytest.fixture()
 def battle_model():
@@ -14,33 +37,42 @@ def mock_random_number(mocker):
     return mocker.patch("meal_max.models.battle_model.get_random", return_value=0.1)
 
 @pytest.fixture()
-def mock_update_meal_stats(mocker):
+def mock_update_meal_stats(mocker, mock_cursor):
     """Mock the update_meal_stats for testing"""
-    return mocker.patch("meal_max.models.kitchen_model.update_meal_stats")
+    update_meal_stats_mock = mocker.patch("meal_max.models.kitchen_model.update_meal_stats")
+
+    return update_meal_stats_mock
 
 """Fixtures providing sample meals for the tests."""
 @pytest.fixture()
 def sample_meal1():
-    return Meal(1, "burger", "american", 5, "LOW")
+    return Meal(5, "burger", "american", 5, "LOW")
 
 @pytest.fixture()
 def sample_meal2():
-    return Meal(2, "pizza", "Italian", 2, "MED")
+    return Meal(7, "pizza", "Italian", 2, "MED")
+
 
 @pytest.fixture()
 def sample_combatants(sample_meal1, sample_meal2):
     return [sample_meal1, sample_meal2]
 
 #Adding the test cases
-def test_battle(battle_model, sample_combatants, mock_random_number, mock_update_meal_stats):
-    battle_model.combatants = sample_combatants
-    assert len(battle_model.combatants) == 2
-
+def test_battle(battle_model, sample_combatants, mock_random_number, mock_update_meal_stats, mock_cursor):
+    mock_cursor.fetchone.side_effect = [
+        sample_combatants
+    ]
+    
+    battle_model.combatants = [sample_combatants[0]]
     with pytest.raises(ValueError, match="Two combatants must be prepped for a battle."):
         battle_model.battle()
 
+    battle_model.combatants = sample_combatants
+    assert len(battle_model.combatants) == 2
+
     mock_random_number.return_value = 0.1
     winner_meal = battle_model.battle()
+    print(battle_model.combatants[0])
     assert winner_meal in ["burger", "pizza"]
 
     assert len(battle_model.combatants) == 1
@@ -52,6 +84,8 @@ def test_battle(battle_model, sample_combatants, mock_random_number, mock_update
     else:
         mock_update_meal_stats.assert_any_call(2, "win")
         mock_update_meal_stats.assert_any_call(1, "loss")
+
+    mock_cursor.execute.assert_called()
 
 def test_clear_combatants(battle_model, sample_combatants):
     battle_model.combatants = sample_combatants

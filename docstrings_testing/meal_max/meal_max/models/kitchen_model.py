@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 configure_logger(logger)
 
 
+
 @dataclass
 class Meal:
     """
@@ -304,8 +305,10 @@ def update_meal_stats(meal_id: int, result: str) -> None:
             cursor.execute("SELECT deleted FROM meals WHERE id = ?", (meal_id,))
             try:
                 deleted = cursor.fetchone()[0]
+                logger.info(deleted)
                 if deleted:
                     logger.info("Meal with ID %s has been deleted", meal_id)
+
                     raise ValueError(f"Meal with ID {meal_id} has been deleted")
             except TypeError:
                 logger.info("Meal with ID %s not found", meal_id)
