@@ -1,0 +1,57 @@
+
+battle() {
+  echo "Playing current song..."
+  response=$(curl -s -X GET "$BASE_URL/battle")
+
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Battle started"
+  else
+    echo "Failed to battle"
+    exit 1
+  fi
+}
+
+clear_combatants() {
+  echo "Clearing combatants..."
+  response=$(curl -s -X POST "$BASE_URL/clear-combatants")
+
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "combatants cleared successfully."
+  else
+    echo "Failed to clear combatants."
+    exit 1
+  fi
+}
+
+get_combatants() {
+  echo "Retrieving current song..."
+  response=$(curl -s -X GET "$BASE_URL/get-combatants")
+
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "combatants retrieved successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Combatants JSON:"
+      echo "$response" | jq .
+    fi
+  else
+    echo "Failed to retrieve combatants."
+    exit 1
+  fi
+}
+
+prep_combatant() {
+  echo "Retrieving current song..."
+  response=$(curl -s -X POST "$BASE_URL/prep-combatant")
+
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "combatants retrieved successfully."
+  else
+    echo "Failed to retrieve combatants."
+    exit 1
+  fi
+}
+
+battle
+clear_combatants
+get_combatants
+prep_combatant
