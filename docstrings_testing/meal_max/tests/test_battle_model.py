@@ -65,6 +65,10 @@ def test_battle_raises_error_with_less_than_two_combatants(battle_model, sample_
         battle_model.battle()
 
 def test_battle(battle_model, sample_combatants, mock_random_number, mock_update_meal_stats, mock_cursor):
+    """
+    Went to OH and asked Prof Golbus on Edstem about this unit test failing regarding a Meal ID 5 has been deleted
+    Edstem Post #326
+    """
     mock_cursor.fetchone.side_effect = [
         sample_combatants
     ]
