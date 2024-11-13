@@ -433,6 +433,10 @@ def test_update_meal_stats_not_found(mock_cursor):
         update_meal_stats(999, "win")
     
 def test_update_meal_stats_invalid_string(mock_cursor):
+    """
+    Went to OH, tried to fix a REGEX not matching problem, but couldnt find a solution
+    This test case should theoretically work, but doesnt
+    """
     mock_cursor.fetchall.return_value = (1, "Meal Name C", "Cuisine Name C", 3, "HIGH", 3, 3, 1.0)
     
     with pytest.raises(ValueError, match="Invalid result: test. Expected 'win' or 'loss'."):
