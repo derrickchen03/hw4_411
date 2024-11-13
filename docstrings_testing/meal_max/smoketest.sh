@@ -123,7 +123,99 @@ get_meal_by_name() {
   fi
 }
 
+###############################################
+#
+# Battle
+#
+###############################################
 
+
+start_battle() {
+  echo "Starting a battle..."
+  response=$(curl -s -w "%{http_code}" -X GET "$BASE_URL/battle")
+  http_status=${response: -3}
+  response_body=${response::-3}
+
+  if [ "$http_status" -eq 200 ]; then
+    echo "Battle completed successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Battle Result JSON:"
+      echo "$response_body" | jq .
+    fi
+  else
+    echo "Failed to start battle. HTTP Status: $http_status"
+    echo "Response: $response_body"
+    exit 1
+  fi
+}
+
+clear_combatants() {
+  echo "Clearing combatants..."
+  response=$(curl -s -X POST "$BASE_URL/clear-combatants")
+
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Combatants cleared successfully."
+  else
+    echo "Failed to clear combatants."
+    exit 1
+  fi
+}
+
+get_combatants() {
+  echo "Retrieving current combatants..."
+  response=$(curl -s -X GET "$BASE_URL/get-combatants")
+
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Combatants retrieved successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Combatants JSON:"
+      echo "$response" | jq .
+    fi
+  else
+    echo "Failed to retrieve combatants."
+    exit 1
+  fi
+}
+
+prep_combatant() {
+  meal_name=$1
+
+  echo "Preparing combatant with Meal Name ($meal_name)..."
+  response=$(curl -s -w "%{http_code}" -X POST "$BASE_URL/prep-combatant" \
+    -H "Content-Type: application/json" \
+    -d "{\"meal\": \"$meal_name\"}")
+  http_status=${response: -3}
+  response_body=${response::-3}
+
+  if [ "$http_status" -eq 200 ]; then
+    echo "Combatant prepared successfully."
+  else
+    echo "Failed to prepare combatant. HTTP Status: $http_status"
+    echo "Response: $response_body"
+    exit 1
+  fi
+}
+
+###############################################
+#
+# Leaderboard
+#
+###############################################
+
+get_leaderboard() {
+  echo "Getting leaderboard of meals..."
+  response=$(curl -s -X GET "$BASE_URL/leaderboard")
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Leaderboard retrieved successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Leaderboard JSON:"
+      echo "$response" | jq .
+    fi
+  else
+    echo "Failed to get leaderboard."
+    exit 1
+  fi
+}
 ###############################################
 #
 # Calling Functions
@@ -148,4 +240,17 @@ get_meal_by_name "Tacos"
 clear_meals
 
 create_meal "Pasta" "Italian" 12.50 "MED"
+create_meal "Curry" "Indian" 14.20 "MED"
+create_meal "Sushi" "Japanese" 15.99 "HIGH"
+create_meal "Burger" "American" 10.00 "LOW"
+create_meal "Tacos" "Mexican" 8.75 "LOW"
 get_meal_by_id 1
+
+prep_combatant "Pasta"
+prep_combatant "Curry"
+get_combatants
+start_battle
+clear_combatants
+
+get_leaderboard
+
