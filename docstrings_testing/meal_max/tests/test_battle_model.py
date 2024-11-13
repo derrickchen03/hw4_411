@@ -58,14 +58,16 @@ def sample_combatants(sample_meal1, sample_meal2):
     return [sample_meal1, sample_meal2]
 
 #Adding the test cases
+def test_battle_raises_error_with_less_than_two_combatants(battle_model, sample_meal1):
+    battle_model.prep_combatant(sample_meal1)
+
+    with pytest.raises(ValueError, match="Two combatants must be prepped for a battle."):
+        battle_model.battle()
+
 def test_battle(battle_model, sample_combatants, mock_random_number, mock_update_meal_stats, mock_cursor):
     mock_cursor.fetchone.side_effect = [
         sample_combatants
     ]
-    
-    battle_model.combatants = [sample_combatants[0]]
-    with pytest.raises(ValueError, match="Two combatants must be prepped for a battle."):
-        battle_model.battle()
 
     battle_model.combatants = sample_combatants
     assert len(battle_model.combatants) == 2
@@ -115,3 +117,10 @@ def test_prep_combatant(battle_model, sample_meal1, sample_meal2):
 
     with pytest.raises(ValueError, match="Combatant list is full, cannot add more combatants."):
         battle_model.prep_combatant(sample_meal1)
+
+def test_prep_combatant_raises_error_when_full(battle_model, sample_meal1, sample_meal2):
+    battle_model.prep_combatant(sample_meal1)
+    battle_model.prep_combatant(sample_meal2)
+    meal3 = Meal(id=3, meal='Meal3', price=11.0, cuisine='Mexican', difficulty='HIGH')
+    with pytest.raises(ValueError, match="Combatant list is full, cannot add more combatants."):
+        battle_model.prep_combatant(meal3)
